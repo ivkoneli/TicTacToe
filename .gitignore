@@ -1,0 +1,29 @@
+# Claude Code
+.claude/
+
+# Unity generated
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+MemoryCaptures/
+
+# Unity cache
+.DS_Store
+*.pidb
+*.suo
+*.user
+*.csproj
+*.sln
+*.userprefs
+
+# Visual Studio
+.vs/
+ExportedObj/
+
+# OS
+Thumbs.db
+Desktop.ini
