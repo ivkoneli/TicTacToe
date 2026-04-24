@@ -5,6 +5,9 @@ using TMPro;
 
 public class MainMenuController : MonoBehaviour
 {
+    [Header("Main Panel")]
+    [SerializeField] private GameObject mainPanel;
+
     [Header("Popups")]
     [SerializeField] private GameObject themePopup;
     [SerializeField] private GameObject statsPopup;
@@ -27,9 +30,12 @@ public class MainMenuController : MonoBehaviour
 
 
     private int _selectedTheme;
+    private CanvasGroup _mainPanelGroup;
 
     private void Awake()
     {
+        _mainPanelGroup = mainPanel.GetComponent<CanvasGroup>();
+        if (_mainPanelGroup == null) _mainPanelGroup = mainPanel.AddComponent<CanvasGroup>();
         _selectedTheme = PlayerPrefs.GetInt("SelectedTheme", 0);
         CloseAllPopups();
         RefreshThemeHighlight();
@@ -41,16 +47,31 @@ public class MainMenuController : MonoBehaviour
     }
 
     // ─── Main menu buttons ───────────────────────────────────────────────────
-    public void OnPlayClicked()     { CloseAllPopups(); themePopup.SetActive(true); }
-    public void OnStatsClicked()    { CloseAllPopups(); RefreshStats(); statsPopup.SetActive(true); }
-    public void OnSettingsClicked() { CloseAllPopups(); settingsPopup.SetActive(true); }
-    public void OnExitClicked()     { CloseAllPopups(); exitPopup.SetActive(true); }
+    public void OnPlayClicked()     { OpenPopup(themePopup); }
+    public void OnStatsClicked()    { RefreshStats(); OpenPopup(statsPopup); }
+    public void OnSettingsClicked() { OpenPopup(settingsPopup); }
+    public void OnExitClicked()     { OpenPopup(exitPopup); }
+
+    private void OpenPopup(GameObject popup)
+    {
+        CloseAllPopups();
+        popup.SetActive(true);
+        SetMainPanelInteractable(false);
+    }
+
     public void CloseAllPopups()
     {
         themePopup.SetActive(false);
         statsPopup.SetActive(false);
         settingsPopup.SetActive(false);
         exitPopup.SetActive(false);
+        SetMainPanelInteractable(true);
+    }
+
+    private void SetMainPanelInteractable(bool state)
+    {
+        _mainPanelGroup.interactable = state;
+        _mainPanelGroup.blocksRaycasts = state;
     }
 
     // ─── Theme popup ────────────────────────────────────────────────────────

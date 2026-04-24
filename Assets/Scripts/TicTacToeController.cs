@@ -20,11 +20,23 @@ public class TicTacToeController : MonoBehaviour
     [SerializeField] private TMP_Text playerXWinsText;
     [SerializeField] private TMP_Text playerOWinsText;
     [SerializeField] private TMP_Text currentTurnText;
+    [SerializeField] private TMP_Text turnCountText;
+
+    [Header("Scoreboard (Portrait)")]
+    [SerializeField] private TMP_Text portraitXWinsText;
+    [SerializeField] private TMP_Text portraitOWinsText;
+    [SerializeField] private TMP_Text portraitCurrentTurnText;
+    [SerializeField] private TMP_Text portraitTurnCountText;
 
     [Header("Win Overlay")]
     [SerializeField] private GameObject winOverlay;
     [SerializeField] private TMP_Text winResultText;
     [SerializeField] private Button playAgainButton;
+
+    [Header("Win Overlay (Portrait)")]
+    [SerializeField] private GameObject portraitWinOverlay;
+    [SerializeField] private TMP_Text portraitWinResultText;
+    [SerializeField] private Button portraitPlayAgainButton;
 
     [Header("Win Line")]
     [SerializeField] private WinLineAnimator winLineAnimator;
@@ -37,11 +49,19 @@ public class TicTacToeController : MonoBehaviour
     private int _moveCount;
     private float _matchStartTime;
 
+    private void SetXWins(string v)         { playerXWinsText.text = v;     if (portraitXWinsText)         portraitXWinsText.text = v; }
+    private void SetOWins(string v)         { playerOWinsText.text = v;     if (portraitOWinsText)         portraitOWinsText.text = v; }
+    private void SetCurrentTurn(string v)   { currentTurnText.text = v;     if (portraitCurrentTurnText)   portraitCurrentTurnText.text = v; }
+    private void SetTurnCount(string v)     { turnCountText.text = v;       if (portraitTurnCountText)     portraitTurnCountText.text = v; }
+    private void SetWinOverlayActive(bool v){ winOverlay.SetActive(v);      if (portraitWinOverlay != null) portraitWinOverlay.SetActive(v); }
+    private void SetWinResultText(string v) { winResultText.text = v;       if (portraitWinResultText != null) portraitWinResultText.text = v; }
+
     private void Awake()
     {
         playAgainButton.onClick.AddListener(PlayAgain);
-        playerXWinsText.text = "0";
-        playerOWinsText.text = "0";
+        if (portraitPlayAgainButton != null) portraitPlayAgainButton.onClick.AddListener(PlayAgain);
+        SetXWins("0");
+        SetOWins("0");
         InitializeBoard();
         ApplyTheme();
         BeginMatch();
@@ -98,7 +118,8 @@ public class TicTacToeController : MonoBehaviour
     {
         _moveCount = 0;
         _matchStartTime = Time.time;
-        winOverlay.SetActive(false);
+        UpdateTurnDisplay();
+        SetWinOverlayActive(false);
         winLineAnimator.Hide();
         foreach (var tile in tiles) tile.Reset();
         TransitionTo(GameState.PlayerXTurn);
@@ -107,7 +128,7 @@ public class TicTacToeController : MonoBehaviour
     private void TransitionTo(GameState newState)
     {
         _state = newState;
-        currentTurnText.text = newState == GameState.PlayerXTurn ? "PLAYING: X" : "PLAYING: O";
+        SetCurrentTurn(newState == GameState.PlayerXTurn ? "PLAYING: X" : "PLAYING: O");
     }
 
     public void OnTileClicked(Tile tile)
@@ -116,6 +137,7 @@ public class TicTacToeController : MonoBehaviour
         var mark = _state == GameState.PlayerXTurn ? TileState.X : TileState.O;
         tile.SetMark(mark);
         _moveCount++;
+        UpdateTurnDisplay();
         var winLine = GetWinLine(tile.Coordinates, mark);
         if (winLine != null)
             HandleWin(mark, winLine);
@@ -148,14 +170,14 @@ public class TicTacToeController : MonoBehaviour
         if (winner == TileState.X)
         {
             _xWins++;
-            playerXWinsText.text = _xWins.ToString();
-            winResultText.text = "PLAYER X WON";
+            SetXWins(_xWins.ToString());
+            SetWinResultText("PLAYER X WON");
         }
         else
         {
             _oWins++;
-            playerOWinsText.text = _oWins.ToString();
-            winResultText.text = "PLAYER O WON";
+            SetOWins(_oWins.ToString());
+            SetWinResultText("PLAYER O WON");
         }
         GameStats.RecordGame(winner, duration);
         StartCoroutine(WinSequence(winLine, winner));
@@ -165,16 +187,21 @@ public class TicTacToeController : MonoBehaviour
     {
         yield return StartCoroutine(winLineAnimator.Animate(winLine, winner, _tileMap));
         AudioManager.Instance?.PlayWin();
-        winOverlay.SetActive(true);
+        SetWinOverlayActive(true);
     }
 
     private void HandleDraw()
     {
         _state = GameState.GameOver;
         float duration = Time.time - _matchStartTime;
-        winResultText.text = "DRAW";
+        SetWinResultText("DRAW");
         GameStats.RecordGame(TileState.Empty, duration);
-        winOverlay.SetActive(true);
+        SetWinOverlayActive(true);
+    }
+
+    private void UpdateTurnDisplay()
+    {
+        SetTurnCount($"TURN : {Mathf.Min(_moveCount + 1, tiles.Count)}");
     }
 
     private void PlayAgain() => BeginMatch();

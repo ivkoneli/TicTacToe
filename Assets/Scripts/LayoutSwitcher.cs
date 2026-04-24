@@ -1,0 +1,42 @@
+using UnityEngine;
+using System.Collections.Generic;
+
+public class LayoutSwitcher : MonoBehaviour
+{
+    [SerializeField] private RectTransform landscapeRoot;
+    [SerializeField] private RectTransform portraitRoot;
+    // When true: same GameObjects move between roots (MainMenu — same layout, different scale).
+    // When false: two distinct layouts toggled by active state (GameScene).
+    [SerializeField] private bool sharedContent;
+
+    private bool _wasPortrait;
+
+    private void Start() => Apply(IsPortrait());
+
+    private void Update()
+    {
+        bool portrait = IsPortrait();
+        if (portrait != _wasPortrait) Apply(portrait);
+    }
+
+    private static bool IsPortrait() => Screen.width < Screen.height;
+
+    private void Apply(bool portrait)
+    {
+        _wasPortrait = portrait;
+        if (portraitRoot == null) return;
+
+        if (sharedContent)
+        {
+            var source = portrait ? landscapeRoot : portraitRoot;
+            var dest   = portrait ? portraitRoot   : landscapeRoot;
+
+            var kids = new List<Transform>();
+            foreach (Transform t in source) kids.Add(t);
+            foreach (var k in kids) k.SetParent(dest, false);
+        }
+
+        landscapeRoot.gameObject.SetActive(!portrait);
+        portraitRoot.gameObject.SetActive(portrait);
+    }
+}
