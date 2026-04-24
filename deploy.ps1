@@ -27,6 +27,35 @@ Get-ChildItem $worktreePath -Exclude ".git" | Remove-Item -Recurse -Force
 Write-Host "Copying new WebGL build..." -ForegroundColor Cyan
 Copy-Item "$webglPath\*" $worktreePath -Recurse -Force
 
+# Inject canvas resize script so Unity's Screen.width/height match the browser window.
+# This makes LayoutSwitcher correctly detect portrait vs landscape on any device.
+$indexPath = Join-Path $worktreePath "index.html"
+if (Test-Path $indexPath) {
+    $resizeScript = @'
+<script>
+  function resizeUnityCanvas() {
+    var canvas = document.querySelector("canvas");
+    if (!canvas) return;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    canvas.style.width  = w + "px";
+    canvas.style.height = h + "px";
+    if (typeof unityInstance !== "undefined" && unityInstance) {
+      unityInstance.Module.setCanvasSize(w, h);
+    }
+  }
+  window.addEventListener("load",   resizeUnityCanvas);
+  window.addEventListener("resize", resizeUnityCanvas);
+</script>
+'@
+    $html = Get-Content $indexPath -Raw
+    $html = $html -replace '</body>', "$resizeScript`n</body>"
+    Set-Content $indexPath $html -Encoding UTF8
+    Write-Host "Canvas resize script injected into index.html" -ForegroundColor Cyan
+} else {
+    Write-Host "WARNING: index.html not found, skipping resize inject." -ForegroundColor Yellow
+}
+
 Push-Location $worktreePath
 git add .
 $date = Get-Date -Format "yyyy-MM-dd HH:mm"
