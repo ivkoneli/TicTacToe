@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[ExecuteAlways]
 public class LayoutSwitcher : MonoBehaviour
 {
     [SerializeField] private RectTransform landscapeRoot;
@@ -8,6 +9,8 @@ public class LayoutSwitcher : MonoBehaviour
     // When true: same GameObjects move between roots (MainMenu — same layout, different scale).
     // When false: two distinct layouts toggled by active state (GameScene).
     [SerializeField] private bool sharedContent;
+    [SerializeField] private GameObject landscapeBackground;
+    [SerializeField] private GameObject portraitBackground;
 
     private bool _wasPortrait;
 
@@ -15,6 +18,8 @@ public class LayoutSwitcher : MonoBehaviour
 
     private void Update()
     {
+        // In edit mode, skip sharedContent mode to avoid moving objects unintentionally
+        if (!Application.isPlaying && sharedContent) return;
         bool portrait = IsPortrait();
         if (portrait != _wasPortrait) Apply(portrait);
     }
@@ -38,5 +43,7 @@ public class LayoutSwitcher : MonoBehaviour
 
         landscapeRoot.gameObject.SetActive(!portrait);
         portraitRoot.gameObject.SetActive(portrait);
+        if (landscapeBackground != null) landscapeBackground.SetActive(!portrait);
+        if (portraitBackground != null) portraitBackground.SetActive(portrait);
     }
 }

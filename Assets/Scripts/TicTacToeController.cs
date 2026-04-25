@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 public enum GameState { PlayerXTurn, PlayerOTurn, GameOver }
@@ -17,16 +18,24 @@ public class TicTacToeController : MonoBehaviour
     [SerializeField] private Sprite[] oThemeSprites;
 
     [Header("Scoreboard")]
-    [SerializeField] private TMP_Text playerXWinsText;
-    [SerializeField] private TMP_Text playerOWinsText;
+    [FormerlySerializedAs("playerXWinsText")] [SerializeField] private TMP_Text xSymbolText;
+    [FormerlySerializedAs("playerOWinsText")] [SerializeField] private TMP_Text oSymbolText;
     [SerializeField] private TMP_Text currentTurnText;
     [SerializeField] private TMP_Text turnCountText;
+    [SerializeField] private GameObject xSelection;
+    [SerializeField] private GameObject oSelection;
 
     [Header("Scoreboard (Portrait)")]
-    [SerializeField] private TMP_Text portraitXWinsText;
-    [SerializeField] private TMP_Text portraitOWinsText;
+    [FormerlySerializedAs("portraitXWinsText")] [SerializeField] private TMP_Text portraitXSymbolText;
+    [FormerlySerializedAs("portraitOWinsText")] [SerializeField] private TMP_Text portraitOSymbolText;
     [SerializeField] private TMP_Text portraitCurrentTurnText;
     [SerializeField] private TMP_Text portraitTurnCountText;
+    [SerializeField] private GameObject portraitXSelection;
+    [SerializeField] private GameObject portraitOSelection;
+
+    [Header("Theme Colors")]
+    [SerializeField] private Color[] xThemeColors;
+    [SerializeField] private Color[] oThemeColors;
 
     [Header("Win Overlay")]
     [SerializeField] private GameObject winOverlay;
@@ -49,8 +58,6 @@ public class TicTacToeController : MonoBehaviour
     private int _moveCount;
     private float _matchStartTime;
 
-    private void SetXWins(string v)         { playerXWinsText.text = v;     if (portraitXWinsText)         portraitXWinsText.text = v; }
-    private void SetOWins(string v)         { playerOWinsText.text = v;     if (portraitOWinsText)         portraitOWinsText.text = v; }
     private void SetCurrentTurn(string v)   { currentTurnText.text = v;     if (portraitCurrentTurnText)   portraitCurrentTurnText.text = v; }
     private void SetTurnCount(string v)     { turnCountText.text = v;       if (portraitTurnCountText)     portraitTurnCountText.text = v; }
     private void SetWinOverlayActive(bool v){ winOverlay.SetActive(v);      if (portraitWinOverlay != null) portraitWinOverlay.SetActive(v); }
@@ -60,8 +67,6 @@ public class TicTacToeController : MonoBehaviour
     {
         playAgainButton.onClick.AddListener(PlayAgain);
         if (portraitPlayAgainButton != null) portraitPlayAgainButton.onClick.AddListener(PlayAgain);
-        SetXWins("0");
-        SetOWins("0");
         InitializeBoard();
         ApplyTheme();
         BeginMatch();
@@ -87,6 +92,19 @@ public class TicTacToeController : MonoBehaviour
         var o = oThemeSprites[theme];
         foreach (var tile in tiles)
             tile.SetTheme(x, o);
+
+        if (xThemeColors != null && theme < xThemeColors.Length)
+        {
+            var xColor = xThemeColors[theme];
+            if (xSymbolText) xSymbolText.color = xColor;
+            if (portraitXSymbolText) portraitXSymbolText.color = xColor;
+        }
+        if (oThemeColors != null && theme < oThemeColors.Length)
+        {
+            var oColor = oThemeColors[theme];
+            if (oSymbolText) oSymbolText.color = oColor;
+            if (portraitOSymbolText) portraitOSymbolText.color = oColor;
+        }
     }
 
     // Generates all rows, columns, and diagonals for an NxN board.
@@ -129,6 +147,10 @@ public class TicTacToeController : MonoBehaviour
     {
         _state = newState;
         SetCurrentTurn(newState == GameState.PlayerXTurn ? "PLAYING: X" : "PLAYING: O");
+        if (portraitXSelection != null) portraitXSelection.SetActive(newState == GameState.PlayerXTurn);
+        if (portraitOSelection != null) portraitOSelection.SetActive(newState == GameState.PlayerOTurn);
+        if (xSelection != null) xSelection.SetActive(newState == GameState.PlayerXTurn);
+        if (oSelection != null) oSelection.SetActive(newState == GameState.PlayerOTurn);
     }
 
     public void OnTileClicked(Tile tile)
@@ -166,17 +188,19 @@ public class TicTacToeController : MonoBehaviour
     private void HandleWin(TileState winner, List<Vector2Int> winLine)
     {
         _state = GameState.GameOver;
+        if (portraitXSelection != null) portraitXSelection.SetActive(false);
+        if (portraitOSelection != null) portraitOSelection.SetActive(false);
+        if (xSelection != null) xSelection.SetActive(false);
+        if (oSelection != null) oSelection.SetActive(false);
         float duration = Time.time - _matchStartTime;
         if (winner == TileState.X)
         {
             _xWins++;
-            SetXWins(_xWins.ToString());
             SetWinResultText("PLAYER X WON");
         }
         else
         {
             _oWins++;
-            SetOWins(_oWins.ToString());
             SetWinResultText("PLAYER O WON");
         }
         GameStats.RecordGame(winner, duration);
@@ -193,6 +217,10 @@ public class TicTacToeController : MonoBehaviour
     private void HandleDraw()
     {
         _state = GameState.GameOver;
+        if (portraitXSelection != null) portraitXSelection.SetActive(false);
+        if (portraitOSelection != null) portraitOSelection.SetActive(false);
+        if (xSelection != null) xSelection.SetActive(false);
+        if (oSelection != null) oSelection.SetActive(false);
         float duration = Time.time - _matchStartTime;
         SetWinResultText("DRAW");
         GameStats.RecordGame(TileState.Empty, duration);
@@ -201,7 +229,7 @@ public class TicTacToeController : MonoBehaviour
 
     private void UpdateTurnDisplay()
     {
-        SetTurnCount($"TURN : {Mathf.Min(_moveCount + 1, tiles.Count)}");
+        SetTurnCount($"Turn : {Mathf.Min(_moveCount + 1, tiles.Count)}");
     }
 
     private void PlayAgain() => BeginMatch();
