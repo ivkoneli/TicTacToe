@@ -6,8 +6,6 @@ public class LayoutSwitcher : MonoBehaviour
 {
     [SerializeField] private RectTransform landscapeRoot;
     [SerializeField] private RectTransform portraitRoot;
-    // When true: same GameObjects move between roots (MainMenu — same layout, different scale).
-    // When false: two distinct layouts toggled by active state (GameScene).
     [SerializeField] private bool sharedContent;
     [SerializeField] private GameObject landscapeBackground;
     [SerializeField] private GameObject portraitBackground;
@@ -18,7 +16,6 @@ public class LayoutSwitcher : MonoBehaviour
 
     private void Update()
     {
-        // In edit mode, skip sharedContent mode to avoid moving objects unintentionally
         if (!Application.isPlaying && sharedContent) return;
         bool portrait = IsPortrait();
         if (portrait != _wasPortrait) Apply(portrait);

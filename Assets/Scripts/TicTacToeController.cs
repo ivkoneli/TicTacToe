@@ -57,11 +57,27 @@ public class TicTacToeController : MonoBehaviour
     private int _oWins;
     private int _moveCount;
     private float _matchStartTime;
+    private bool _xStartsNext = true;
 
     private void SetCurrentTurn(string v)   { currentTurnText.text = v;     if (portraitCurrentTurnText)   portraitCurrentTurnText.text = v; }
     private void SetTurnCount(string v)     { turnCountText.text = v;       if (portraitTurnCountText)     portraitTurnCountText.text = v; }
-    private void SetWinOverlayActive(bool v){ winOverlay.SetActive(v);      if (portraitWinOverlay != null) portraitWinOverlay.SetActive(v); }
     private void SetWinResultText(string v) { winResultText.text = v;       if (portraitWinResultText != null) portraitWinResultText.text = v; }
+
+    private void SetWinOverlayActive(bool v, bool showFlares = true)
+    {
+        winOverlay.SetActive(v);
+        if (portraitWinOverlay != null) portraitWinOverlay.SetActive(v);
+        SetFlaresActive(winOverlay, showFlares);
+        if (portraitWinOverlay != null) SetFlaresActive(portraitWinOverlay, showFlares);
+    }
+
+    private static void SetFlaresActive(GameObject overlay, bool active)
+    {
+        var flare1 = overlay.transform.Find("Flare1");
+        var flare2 = overlay.transform.Find("Flare2");
+        if (flare1) flare1.gameObject.SetActive(active);
+        if (flare2) flare2.gameObject.SetActive(active);
+    }
 
     private void Awake()
     {
@@ -107,7 +123,6 @@ public class TicTacToeController : MonoBehaviour
         }
     }
 
-    // Generates all rows, columns, and diagonals for an NxN board.
     private static List<List<Vector2Int>> BuildWinLines(int n)
     {
         var lines = new List<List<Vector2Int>>();
@@ -137,10 +152,10 @@ public class TicTacToeController : MonoBehaviour
         _moveCount = 0;
         _matchStartTime = Time.time;
         UpdateTurnDisplay();
-        SetWinOverlayActive(false);
+        SetWinOverlayActive(false, showFlares: true);
         winLineAnimator.Hide();
         foreach (var tile in tiles) tile.Reset();
-        TransitionTo(GameState.PlayerXTurn);
+        TransitionTo(_xStartsNext ? GameState.PlayerXTurn : GameState.PlayerOTurn);
     }
 
     private void TransitionTo(GameState newState)
@@ -203,6 +218,7 @@ public class TicTacToeController : MonoBehaviour
             _oWins++;
             SetWinResultText("PLAYER O WON");
         }
+        _xStartsNext = !_xStartsNext;
         GameStats.RecordGame(winner, duration);
         StartCoroutine(WinSequence(winLine, winner));
     }
@@ -222,9 +238,10 @@ public class TicTacToeController : MonoBehaviour
         if (xSelection != null) xSelection.SetActive(false);
         if (oSelection != null) oSelection.SetActive(false);
         float duration = Time.time - _matchStartTime;
+        _xStartsNext = !_xStartsNext;
         SetWinResultText("DRAW");
         GameStats.RecordGame(TileState.Empty, duration);
-        SetWinOverlayActive(true);
+        SetWinOverlayActive(true, showFlares: false);
     }
 
     private void UpdateTurnDisplay()

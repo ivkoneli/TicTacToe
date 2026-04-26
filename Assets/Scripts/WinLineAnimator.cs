@@ -27,8 +27,6 @@ public class WinLineAnimator : MonoBehaviour
         int theme = Mathf.Clamp(PlayerPrefs.GetInt("SelectedTheme", 0), 0, 2);
         lineRenderer.sprite = winner == TileState.X ? xLineSprites[theme] : oLineSprites[theme];
 
-        // Sprites are vertical (line runs along local Y at 0°).
-        // Subtract 90° so local Y aligns with the win direction, then scale Y to match.
         float worldAngle  = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         float spriteAngle = worldAngle - 90f;
         float targetScale = dir.magnitude / lineRenderer.sprite.bounds.size.y;
@@ -46,7 +44,6 @@ public class WinLineAnimator : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / animDuration));
-            // Move center along the line so the sprite draws from startPos toward endPos
             var pos = startPos + (Vector3)((Vector2)dir * (t * 0.5f));
             lineRenderer.transform.position   = new Vector3(pos.x, pos.y, posZ);
             lineRenderer.transform.localScale  = new Vector3(targetScale, t * targetScale, 1f);

@@ -46,7 +46,6 @@ public class MainMenuController : MonoBehaviour
         sfxToggle.onValueChanged.AddListener(v => AudioManager.Instance?.SetSFX(v));
     }
 
-    // ─── Main menu buttons ───────────────────────────────────────────────────
     public void OnPlayClicked()     { OpenPopup(themePopup); }
     public void OnStatsClicked()    { RefreshStats(); OpenPopup(statsPopup); }
     public void OnSettingsClicked() { OpenPopup(settingsPopup); }
@@ -74,7 +73,6 @@ public class MainMenuController : MonoBehaviour
         _mainPanelGroup.blocksRaycasts = state;
     }
 
-    // ─── Theme popup ────────────────────────────────────────────────────────
     public void SelectTheme(int index)
     {
         _selectedTheme = index;
@@ -95,7 +93,6 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    // ─── Stats popup ────────────────────────────────────────────────────────
     private void RefreshStats()
     {
         totalGamesText.text  = GameStats.TotalGames.ToString();
@@ -106,7 +103,6 @@ public class MainMenuController : MonoBehaviour
         avgDurationText.text = string.Format("{0:00}:{1:00.0}", Mathf.FloorToInt(avg / 60f), avg % 60f);
     }
 
-    // ─── Exit popup ─────────────────────────────────────────────────────────
     public void ConfirmExit() => Application.Quit();
     public void CancelExit()  => exitPopup.SetActive(false);
 }
